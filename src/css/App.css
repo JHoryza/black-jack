@@ -1,4 +1,9 @@
 .App {
   text-align: center;
   color: white;
+  background-color: #477148;
+}
+
+hr {
+  border: 1px solid white;
 }

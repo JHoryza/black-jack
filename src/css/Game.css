@@ -1,0 +1,17 @@
+.Game,
+.row {
+    height: 512px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+h2 {
+    font-size: 48px;
+    margin-bottom: 24px;
+}
+
+.btn {
+    font-size: 24px;
+}
