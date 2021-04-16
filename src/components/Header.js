@@ -1,4 +1,4 @@
-import '../css/Header.css'
+import '../css/Header.css';
 
 function Header() {
     return (
@@ -8,4 +8,4 @@ function Header() {
     );
 }
 
-export default Header
+export default Header;

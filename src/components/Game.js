@@ -1,8 +1,22 @@
-import '../css/Game.css'
-import Button from 'react-bootstrap/Button'
+import '../css/Game.css';
+import Button from 'react-bootstrap/Button';
 import React from 'react';
+import DealerHand from './game/DealerHand';
+import PlayerHand from './game/PlayerHand';
+import GameControls from './game/GameControls';
+import GameManager from './game/GameManager';
 
-const DEFAULT = 0;
+/*
+TODO:
+
+-Stand and Split functionality
+-Ace high/low logic checking
+-Game end event win/loss
+-Dealer drawing
+
+*/
+
+const IDLE = 0;
 const PLAY_GAME = 1;
 const GAME_WON = 2;
 const GAME_LOST = 3;
@@ -15,7 +29,7 @@ class Game extends React.Component {
         super(props);
 
         this.state = {
-            gameState: DEFAULT,
+            gameState: IDLE,
             deckId: "",
             dealerHand: [],
             playerHand: [],
@@ -78,7 +92,6 @@ class Game extends React.Component {
         }
         if (value > 21) {
             return "BUST!";
-            //this.setState({ gameState: GAME_LOST });
         }
         return "Value: " + value;
     }
@@ -89,59 +102,34 @@ class Game extends React.Component {
         });
     }
 
-    renderGameState(state) {
-        console.log(this.state.playerHand);
-        switch (state) {
+    render() {
+        switch (this.state.gameState) {
+            case GAME_LOST:
+            case GAME_WON:
             case PLAY_GAME:
                 return (
-                    <div className="container-fluid center-in-parent">
-                        {/* Dealer's Hand */}
-                        <div className="row">
-                            <div className="hand">
-                                <h3>Dealer's Hand</h3>
-                                {this.state.dealerHand.map((card, i) => (
-                                    <img className="card" src={card.image} alt={card.code} key={i}></img>
-                                ))}
-                                <p>{this.getHandValue(this.state.dealerHand)}</p>
-                            </div>
-                        </div>
-                        {/* Player's Hand */}
-                        <div className="row">
-                            <div className="hand">
-                                <p>{this.getHandValue(this.state.playerHand)}</p>
-                                {this.state.playerHand.map((card, i) => (
-                                    <img className="card" src={card.image} alt={card.code} key={i}></img>
-                                ))}
-                            </div>
-                            <h3>Your Hand</h3>
-                        </div>
-                        {/* Game Controls */}
-                        <div>
-                            <Button className="btn-game">Stand</Button>
-                            <Button className="btn-game" onClick={this.hit}>Hit</Button>
-                            <Button className="btn-game">Split</Button>
+                    <div className="Game container-fluid">
+                        <div className="container-fluid center-in-parent">
+                            <DealerHand hand={this.state.dealerHand} handValue={this.getHandValue(this.state.dealerHand)} />
+                            <GameManager gameState={this.state.gameState} />
+                            <PlayerHand hand={this.state.playerHand} handValue={this.getHandValue(this.state.playerHand)} />
+                            <GameControls hit={this.hit} />
                         </div>
                     </div>
                 );
             default:
                 return (
                     <>
-                        <div className="center-in-parent">
-                            <h2>Blackjack</h2>
-                            <Button onClick={this.startGame} className="btn-play">Play Game</Button>
+                        <div className="Game container-fluid">
+                            <div className="center-in-parent">
+                                <h2>Blackjack</h2>
+                                <Button onClick={this.startGame} className="btn-play">Play Game</Button>
+                            </div>
                         </div>
                     </>
                 );
         }
     }
-
-    render() {
-        return (
-            <div className="Game container-fluid">
-                {this.renderGameState(this.state.gameState)}
-            </div>
-        );
-    }
 }
 
-export default Game
+export default Game;
