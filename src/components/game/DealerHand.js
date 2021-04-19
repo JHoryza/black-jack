@@ -9,8 +9,8 @@ class DealerHand extends React.Component {
     render() {
         return (
             <div className="row">
+                <h3>Dealer's Hand</h3>
                 <div className="hand">
-                    <h3>Dealer's Hand</h3>
                     {this.props.hand.map((card, i) => (
                         <img className="card" src={card.image} alt={card.code} key={i}></img>
                     ))}

@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
-import Game from '../Game';
+import * as Game from '../Game';
 
 class GameManager extends React.Component {
 
@@ -10,10 +10,19 @@ class GameManager extends React.Component {
 
     componentDidMount() {
         switch (this.props.gameState) {
+            case Game.GAME_TIE:
+            case Game.GAME_WON:
+            case Game.GAME_LOST:
+                return (
+                    <div id="game-manager">
+                        <Button className="btn-game" onClick={this.props.startGame}>Play Again</Button>
+                        <Button className="btn-game">Quit</Button>
+                    </div>
+                );
             case Game.PLAY_GAME:
             default:
                 return (
-                    <Button>Play Again</Button>
+                    <div id="game-manager"></div>
                 );
         }
     }
