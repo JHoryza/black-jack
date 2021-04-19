@@ -47,6 +47,7 @@ class Game extends React.Component {
         };
 
         this.startGame = this.startGame.bind(this);
+        this.stand = this.stand.bind(this);
         this.hit = this.hit.bind(this);
     }
 
@@ -124,7 +125,7 @@ class Game extends React.Component {
             this.setState({ gameState: GAME_WON });
             return "YOU WIN!";
         }
-        return "Value: " + value;
+        return value;
     }
 
     /**
@@ -134,6 +135,23 @@ class Game extends React.Component {
         this.drawCard(this.state.playerHand, 1).then(pHand => {
             this.setState({ playerHand: pHand, playerCardVal: this.getHandValue(pHand) });
         });
+    }
+
+    stand() {
+        console.log("TEST");
+        if (this.state.dealerCardVal < this.state.playerCardVal) {
+            this.drawCard(this.state.dealerHand, 1).then(dHand => {
+                this.setState({ dealerHand: dHand, dealerCardVal: this.getHandValue(dHand) },
+                    this.stand
+                );
+            });
+        } else if (this.state.dealerCardVal > 21) {
+            this.setState({ gameState: GAME_WON });
+            return;
+        } else if (this.state.dealerCardVal == this.state.playerCardVal) {
+            this.setState({ gameState: GAME_TIE });
+            return;
+        }
     }
 
     /**
@@ -152,7 +170,7 @@ class Game extends React.Component {
                             <DealerHand hand={this.state.dealerHand} handValue={this.state.dealerCardVal} />
                             <GameManager gameState={this.state.gameState} startGame={this.startGame} />
                             <PlayerHand hand={this.state.playerHand} handValue={this.state.playerCardVal} />
-                            <GameControls hit={this.hit} />
+                            <GameControls stand={this.stand} hit={this.hit} />
                         </div>
                     </div>
                 );

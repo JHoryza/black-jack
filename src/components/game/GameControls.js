@@ -10,7 +10,7 @@ class GameControls extends React.Component {
     render() {
         return (
             <div id="game-controls">
-                <Button className="btn-game">Stand</Button>
+                <Button className="btn-game" onClick={this.props.stand}>Stand</Button>
                 <Button className="btn-game" onClick={this.props.hit}>Hit</Button>
                 <Button className="btn-game">Split</Button>
             </div>

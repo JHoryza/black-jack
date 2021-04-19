@@ -10,7 +10,7 @@ class PlayerHand extends React.Component {
         return (
             <div className="row">
                 <div className="hand">
-                    <p>{this.props.handValue}</p>
+                    <p>Value: {this.props.handValue}</p>
                     {this.props.hand.map((card, i) => (
                         <img className="card" src={card.image} alt={card.code} key={i}></img>
                     ))}

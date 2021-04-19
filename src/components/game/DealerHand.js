@@ -14,7 +14,7 @@ class DealerHand extends React.Component {
                     {this.props.hand.map((card, i) => (
                         <img className="card" src={card.image} alt={card.code} key={i}></img>
                     ))}
-                    <p>{this.props.handValue}</p>
+                    <p>Value: {this.props.handValue}</p>
                 </div>
             </div>
         );
