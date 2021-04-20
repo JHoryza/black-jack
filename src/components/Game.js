@@ -4,14 +4,11 @@ import React from 'react';
 import DealerHand from './game/DealerHand';
 import PlayerHand from './game/PlayerHand';
 import GameControls from './game/GameControls';
-import GameManager from './game/GameManager';
 
 /*
 TODO:
 
 -Split functionality
--Ace high/low logic checking
--Game end event win/loss
 
 */
 
@@ -55,7 +52,8 @@ class Game extends React.Component {
                 this.drawCard(this.state.playerHand, 2).then(pHand => {
                     this.setState({
                         dealerHand: dHand, dealerCardVal: this.getHandValue(dHand),
-                        playerHand: pHand, playerCardVal: this.getHandValue(pHand), gameState: PLAY_GAME
+                        playerHand: pHand, playerCardVal: this.getHandValue(pHand),
+                        gameState: PLAY_GAME
                     },
                         this.checkWinCondition
                     );
@@ -91,7 +89,8 @@ class Game extends React.Component {
                     }
                     return tempHand;
                 });
-        return await newHand;
+                console.log(newHand);
+        return newHand;
     }
 
     /**
@@ -101,10 +100,12 @@ class Game extends React.Component {
      */
     getHandValue(hand) {
         let value = 0;
+        let numAces = 0;
+        // Calculate value of non-ACE cards
         for (var i = 0; i < hand.length; i++) {
             switch (hand[i].value) {
                 case "ACE":
-                    value += 11;
+                    numAces++;
                     break;
                 case "KING":
                 case "QUEEN":
@@ -114,6 +115,16 @@ class Game extends React.Component {
                 default:
                     value += parseInt(hand[i].value);
                     break;
+            }
+        }
+        // Calculate value of Aces to produce best hand
+        for (var i = 0; i < numAces; i++) {
+            if (value + numAces >= 21) {
+                value += numAces;
+            } else if (value + 11 + (numAces - i) <= 21) {
+                value += 11;
+            } else {
+                value += 1;
             }
         }
         return value;
@@ -130,6 +141,9 @@ class Game extends React.Component {
         });
     }
 
+    /**
+     * Dealer draws cards until a win condition is met
+     */
     stand() {
         if (this.state.dealerCardVal < this.state.playerCardVal || this.state.dealerCardVal < 17) {
             this.drawCard(this.state.dealerHand, 1).then(dHand => {
@@ -141,6 +155,9 @@ class Game extends React.Component {
         this.checkWinCondition();
     }
 
+    /**
+     * Checks for win conditions that would end the game
+     */
     checkWinCondition() {
         let outcome = this.state.gameState;
         let message = "";
