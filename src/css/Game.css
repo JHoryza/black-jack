@@ -37,6 +37,7 @@ p {
     margin: 15px;
 }
 
-#game-manager {
-    height: 36px;
+.container-fluid #endGameMessage {
+    height: 12px;
+    font-size: 36px;
 }

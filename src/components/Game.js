@@ -53,8 +53,10 @@ class Game extends React.Component {
         this.shuffleDeck().then(() => {
             this.drawCard(this.state.dealerHand, 1).then(dHand => {
                 this.drawCard(this.state.playerHand, 2).then(pHand => {
-                    this.setState({ dealerHand: dHand, dealerCardVal: this.getHandValue(dHand), 
-                        playerHand: pHand, playerCardVal: this.getHandValue(pHand), gameState: PLAY_GAME },
+                    this.setState({
+                        dealerHand: dHand, dealerCardVal: this.getHandValue(dHand),
+                        playerHand: pHand, playerCardVal: this.getHandValue(pHand), gameState: PLAY_GAME
+                    },
                         this.checkWinCondition
                     );
                 });
@@ -154,6 +156,9 @@ class Game extends React.Component {
         } else if (this.state.dealerCardVal == this.state.playerCardVal) {
             outcome = GAME_TIE;
             message = "PUSH!";
+        } else if (this.state.dealerCardVal > this.state.playerCardVal) {
+            outcome = GAME_LOST;
+            message = "YOU LOSE!";
         }
         this.setState({ gameState: outcome, endGameMessage: message });
     }
@@ -169,25 +174,19 @@ class Game extends React.Component {
             case GAME_WON:
             case PLAY_GAME:
                 return (
-                    <div id="game" className="container-fluid">
-                        <div className="container-fluid center-in-parent">
-                            <DealerHand hand={this.state.dealerHand} handValue={this.state.dealerCardVal} />
-                            <GameManager gameState={this.state.gameState} message={this.state.endGameMessage} startGame={this.startGame} />
-                            <PlayerHand hand={this.state.playerHand} handValue={this.state.playerCardVal} />
-                            <GameControls stand={this.stand} hit={this.hit} />
-                        </div>
+                    <div className="container-fluid center-in-parent">
+                        <DealerHand hand={this.state.dealerHand} handValue={this.state.dealerCardVal} />
+                        <p id="endGameMessage" className="center-in-parent">{this.state.endGameMessage}</p>
+                        <PlayerHand hand={this.state.playerHand} handValue={this.state.playerCardVal} />
+                        <GameControls gameState={this.state.gameState} startGame={this.startGame} stand={this.stand} hit={this.hit} />
                     </div>
                 );
             default:
                 return (
-                    <>
-                        <div id="game" className="container-fluid">
-                            <div className="center-in-parent">
-                                <h2>Blackjack</h2>
-                                <Button onClick={this.startGame} className="btn-play">Play Game</Button>
-                            </div>
-                        </div>
-                    </>
+                    <div className="center-in-parent">
+                        <h2>Blackjack</h2>
+                        <Button onClick={this.startGame} className="btn-play">Play Game</Button>
+                    </div>
                 );
         }
     }
