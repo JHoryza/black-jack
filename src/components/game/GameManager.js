@@ -15,6 +15,7 @@ class GameManager extends React.Component {
             case Game.GAME_LOST:
                 return (
                     <div id="game-manager">
+                        <p>{this.props.message}</p>
                         <Button className="btn-game" onClick={this.props.startGame}>Play Again</Button>
                         <Button className="btn-game">Quit</Button>
                     </div>

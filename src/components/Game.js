@@ -9,10 +9,9 @@ import GameManager from './game/GameManager';
 /*
 TODO:
 
--Stand and Split functionality
+-Split functionality
 -Ace high/low logic checking
 -Game end event win/loss
--Dealer drawing
 
 */
 
@@ -22,15 +21,6 @@ export const GAME_WON = 2;
 export const GAME_LOST = 3;
 export const GAME_TIE = 4;
 export const END_GAME = 5;
-
-const INITIAL_STATE = {
-    gameState: IDLE,
-    deckId: "",
-    dealerHand: [],
-    playerHand: [],
-    dealerCardVal: 0,
-    playerCardVal: 0
-};
 
 class Game extends React.Component {
 
@@ -43,24 +33,30 @@ class Game extends React.Component {
             dealerHand: [],
             playerHand: [],
             dealerCardVal: 0,
-            playerCardVal: 0
+            playerCardVal: 0,
+            endGameMessage: ""
         };
 
         this.startGame = this.startGame.bind(this);
         this.stand = this.stand.bind(this);
         this.hit = this.hit.bind(this);
+        this.checkWinCondition = this.checkWinCondition.bind(this);
     }
 
     /**
      * Handles start of game routines
      */
     startGame() {
-        this.setState({ deckId: "", dealerHand: [], playerHand: [], dealerCardVal: 0, playerCardVal: 0 });
+        // Reset game state properties
+        this.setState({ deckId: "", dealerHand: [], playerHand: [], dealerCardVal: 0, playerCardVal: 0, endGameMessage: "" });
+        // Shuffle new deck and deal out opening hands
         this.shuffleDeck().then(() => {
             this.drawCard(this.state.dealerHand, 1).then(dHand => {
-                this.setState({ dealerHand: dHand, dealerCardVal: this.getHandValue(dHand) });
                 this.drawCard(this.state.playerHand, 2).then(pHand => {
-                    this.setState({ playerHand: pHand, playerCardVal: this.getHandValue(pHand), gameState: PLAY_GAME });
+                    this.setState({ dealerHand: dHand, dealerCardVal: this.getHandValue(dHand), 
+                        playerHand: pHand, playerCardVal: this.getHandValue(pHand), gameState: PLAY_GAME },
+                        this.checkWinCondition
+                    );
                 });
             });
         });
@@ -118,13 +114,6 @@ class Game extends React.Component {
                     break;
             }
         }
-        if (value > 21) {
-            this.setState({ gameState: GAME_LOST });
-            return "BUST!";
-        } else if (value == 21) {
-            this.setState({ gameState: GAME_WON });
-            return "YOU WIN!";
-        }
         return value;
     }
 
@@ -133,25 +122,40 @@ class Game extends React.Component {
      */
     hit() {
         this.drawCard(this.state.playerHand, 1).then(pHand => {
-            this.setState({ playerHand: pHand, playerCardVal: this.getHandValue(pHand) });
+            this.setState({ playerHand: pHand, playerCardVal: this.getHandValue(pHand) },
+                this.checkWinCondition
+            );
         });
     }
 
     stand() {
-        console.log("TEST");
-        if (this.state.dealerCardVal < this.state.playerCardVal) {
+        if (this.state.dealerCardVal < this.state.playerCardVal || this.state.dealerCardVal < 17) {
             this.drawCard(this.state.dealerHand, 1).then(dHand => {
                 this.setState({ dealerHand: dHand, dealerCardVal: this.getHandValue(dHand) },
                     this.stand
                 );
             });
-        } else if (this.state.dealerCardVal > 21) {
-            this.setState({ gameState: GAME_WON });
-            return;
-        } else if (this.state.dealerCardVal == this.state.playerCardVal) {
-            this.setState({ gameState: GAME_TIE });
-            return;
         }
+        this.checkWinCondition();
+    }
+
+    checkWinCondition() {
+        let outcome = this.state.gameState;
+        let message = "";
+        if (this.state.playerCardVal == 21 && this.state.playerHand.length == 2) {
+            outcome = GAME_WON;
+            message = "BLACKJACK!";
+        } else if (this.state.playerCardVal > 21) {
+            outcome = GAME_LOST;
+            message = "BUST!";
+        } else if (this.state.dealerCardVal > 21) {
+            outcome = GAME_WON;
+            message = "YOU WIN!";
+        } else if (this.state.dealerCardVal == this.state.playerCardVal) {
+            outcome = GAME_TIE;
+            message = "PUSH!";
+        }
+        this.setState({ gameState: outcome, endGameMessage: message });
     }
 
     /**
@@ -168,7 +172,7 @@ class Game extends React.Component {
                     <div id="game" className="container-fluid">
                         <div className="container-fluid center-in-parent">
                             <DealerHand hand={this.state.dealerHand} handValue={this.state.dealerCardVal} />
-                            <GameManager gameState={this.state.gameState} startGame={this.startGame} />
+                            <GameManager gameState={this.state.gameState} message={this.state.endGameMessage} startGame={this.startGame} />
                             <PlayerHand hand={this.state.playerHand} handValue={this.state.playerCardVal} />
                             <GameControls stand={this.stand} hit={this.hit} />
                         </div>
