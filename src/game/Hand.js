@@ -1,32 +1,36 @@
+import Game from '../components/Game';
+
 class Hand {
 
     constructor(hand) {
-        cards = hand;
-        value = 0;
+        this.cards = hand;
+        this.value = 0;
     }
 
-    addCard(card) {
-
+    add(cards) {
+        for (var i = 0; i < cards.length; i++) {
+            this.cards.push(cards[i]);
+        }
     }
 
-    removeCard(card) {
+    remove(cards) {
 
     }
 
     getCards() {
-
+        return this.cards;
     }
 
-    setCards() {
-
+    setCards(cards) {
+        this.cards = cards;
     }
 
     getValue() {
-
+        return this.value;
     }
 
-    setValue() {
-        
+    setValue(value) {
+        this.value = value;
     }
 }
 

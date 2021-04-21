@@ -2,12 +2,12 @@ import React from 'react';
 
 class PlayerHand extends React.Component {
 
-    hand(cards) {
+    renderHand(hand, i) {
         return (
             <div className="cards">
-                <p>Value: {this.props.handValue}</p>
-                {this.props.hand.map((card, i) => (
-                    <img className="card" src={card.image} alt={card.code} key={i}></img>
+                <p>Value: {hand.getValue()}</p>
+                {hand.getCards().map((card, j) => (
+                    <img className="card" src={card.image} alt={card.code} key={j}></img>
                 ))}
             </div>
         );
@@ -17,7 +17,11 @@ class PlayerHand extends React.Component {
         return (
             <div className="row">
                 <div className="hand">
-                    {this.hand()}
+                    {this.props.hands.map((hand, i) => (
+                        <div key={i}>
+                            {this.renderHand(hand, i)}
+                        </div>
+                    ))}
                 </div>
                 <h3>Your Hand</h3>
             </div>
