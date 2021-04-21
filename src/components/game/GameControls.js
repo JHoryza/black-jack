@@ -1,16 +1,12 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
-import * as Game from '../Game';
+import * as State from '../../game/State';
 
 class GameControls extends React.Component {
 
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         switch (this.props.gameState) {
-            case Game.PLAY_GAME:
+            case State.PLAY_GAME:
                 return (
                     <div id="game-controls">
                         <Button className="btn-game" onClick={this.props.stand}>Stand</Button>
@@ -18,9 +14,9 @@ class GameControls extends React.Component {
                         <Button className="btn-game">Split</Button>
                     </div>
                 );
-            case Game.GAME_WON:
-            case Game.GAME_LOST:
-            case Game.GAME_TIE:
+            case State.GAME_WON:
+            case State.GAME_LOST:
+            case State.GAME_TIE:
             default:
                 return (
                     <div id="game-controls">

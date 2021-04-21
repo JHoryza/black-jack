@@ -4,6 +4,7 @@ import React from 'react';
 import DealerHand from './game/DealerHand';
 import PlayerHand from './game/PlayerHand';
 import GameControls from './game/GameControls';
+import * as State from '../game/State';
 
 /*
 TODO:
@@ -12,23 +13,17 @@ TODO:
 
 */
 
-export const IDLE = 0;
-export const PLAY_GAME = 1;
-export const GAME_WON = 2;
-export const GAME_LOST = 3;
-export const GAME_TIE = 4;
-export const END_GAME = 5;
-
 class Game extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            gameState: IDLE,
+            gameState: State.IDLE,
             deckId: "",
             dealerHand: [],
             playerHand: [],
+            splitHand: [],
             dealerCardVal: 0,
             playerCardVal: 0,
             endGameMessage: ""
@@ -45,7 +40,7 @@ class Game extends React.Component {
      */
     startGame() {
         // Reset game state properties
-        this.setState({ deckId: "", dealerHand: [], playerHand: [], dealerCardVal: 0, playerCardVal: 0, endGameMessage: "" });
+        this.setState({ deckId: "", dealerHand: [], playerHand: [], splitHand: [], dealerCardVal: 0, playerCardVal: 0, endGameMessage: "" });
         // Shuffle new deck and deal out opening hands
         this.shuffleDeck().then(() => {
             this.drawCard(this.state.dealerHand, 1).then(dHand => {
@@ -53,7 +48,7 @@ class Game extends React.Component {
                     this.setState({
                         dealerHand: dHand, dealerCardVal: this.getHandValue(dHand),
                         playerHand: pHand, playerCardVal: this.getHandValue(pHand),
-                        gameState: PLAY_GAME
+                        gameState: State.PLAY_GAME
                     },
                         this.checkWinCondition
                     );
@@ -89,7 +84,6 @@ class Game extends React.Component {
                     }
                     return tempHand;
                 });
-                console.log(newHand);
         return newHand;
     }
 
@@ -101,8 +95,9 @@ class Game extends React.Component {
     getHandValue(hand) {
         let value = 0;
         let numAces = 0;
+        let i = 0;
         // Calculate value of non-ACE cards
-        for (var i = 0; i < hand.length; i++) {
+        for (i = 0; i < hand.length; i++) {
             switch (hand[i].value) {
                 case "ACE":
                     numAces++;
@@ -118,7 +113,7 @@ class Game extends React.Component {
             }
         }
         // Calculate value of Aces to produce best hand
-        for (var i = 0; i < numAces; i++) {
+        for (i = 0; i < numAces; i++) {
             if (value + numAces >= 21) {
                 value += numAces;
             } else if (value + 11 + (numAces - i) <= 21) {
@@ -161,20 +156,20 @@ class Game extends React.Component {
     checkWinCondition() {
         let outcome = this.state.gameState;
         let message = "";
-        if (this.state.playerCardVal == 21 && this.state.playerHand.length == 2) {
-            outcome = GAME_WON;
+        if (this.state.playerCardVal === 21 && this.state.playerHand.length === 2) {
+            outcome = State.GAME_WON;
             message = "BLACKJACK!";
         } else if (this.state.playerCardVal > 21) {
-            outcome = GAME_LOST;
+            outcome = State.GAME_LOST;
             message = "BUST!";
         } else if (this.state.dealerCardVal > 21) {
-            outcome = GAME_WON;
+            outcome = State.GAME_WON;
             message = "YOU WIN!";
-        } else if (this.state.dealerCardVal == this.state.playerCardVal) {
-            outcome = GAME_TIE;
+        } else if (this.state.dealerCardVal === this.state.playerCardVal) {
+            outcome = State.GAME_TIE;
             message = "PUSH!";
         } else if (this.state.dealerCardVal > this.state.playerCardVal) {
-            outcome = GAME_LOST;
+            outcome = State.GAME_LOST;
             message = "YOU LOSE!";
         }
         this.setState({ gameState: outcome, endGameMessage: message });
@@ -186,10 +181,10 @@ class Game extends React.Component {
      */
     render() {
         switch (this.state.gameState) {
-            case GAME_TIE:
-            case GAME_LOST:
-            case GAME_WON:
-            case PLAY_GAME:
+            case State.GAME_TIE:
+            case State.GAME_LOST:
+            case State.GAME_WON:
+            case State.PLAY_GAME:
                 return (
                     <div className="container-fluid center-in-parent">
                         <DealerHand hand={this.state.dealerHand} handValue={this.state.dealerCardVal} />

@@ -20,12 +20,12 @@
     flex-flow: column;
 }
 
-.hand {
+.cards {
     margin: 20px;
     height: 175px;
 }
 
-.hand img {
+.cards img {
     display: inline-block;
     height: 125px;
     margin-left: auto;
@@ -40,4 +40,8 @@ p {
 .container-fluid #endGameMessage {
     height: 12px;
     font-size: 36px;
+}
+
+.hand {
+    display: inline-flex;
 }
