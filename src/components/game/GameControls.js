@@ -14,9 +14,7 @@ class GameControls extends React.Component {
                         <Button className="btn-game" onClick={this.props.split}>Split</Button>
                     </div>
                 );
-            case State.GAME_WON:
-            case State.GAME_LOST:
-            case State.GAME_TIE:
+            case State.END_GAME:
             default:
                 return (
                     <div id="game-controls">

@@ -5,7 +5,7 @@ class PlayerHand extends React.Component {
     renderHand(hand, i) {
         return (
             <div className="cards">
-                <p>Value: {hand.getValue()}</p>
+                <p>Value: {hand.getValue()} {hand.getStatus()}</p>
                 {hand.getCards().map((card, j) => (
                     <img className="card" src={card.image} alt={card.code} key={j}></img>
                 ))}

@@ -3,6 +3,7 @@ class Hand {
     constructor(hand) {
         this.cards = hand;
         this.value = 0;
+        this.status = "";
     }
 
     addCards(cards) {
@@ -29,6 +30,14 @@ class Hand {
 
     setValue(value) {
         this.value = value;
+    }
+
+    getStatus() {
+        return this.status;
+    }
+
+    setStatus(status) {
+        this.status = status;
     }
 }
 
