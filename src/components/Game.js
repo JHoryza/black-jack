@@ -31,6 +31,7 @@ class Game extends React.Component {
         this.startGame = this.startGame.bind(this);
         this.stand = this.stand.bind(this);
         this.hit = this.hit.bind(this);
+        this.split = this.split.bind(this);
         this.checkWinCondition = this.checkWinCondition.bind(this);
     }
 
@@ -46,9 +47,9 @@ class Game extends React.Component {
             let pHand = this.state.playerHand[this.state.activeHand];
             this.drawCard(1).then((dCards) => {
                 this.drawCard(2).then((pCards) => {
-                    dHand.add(dCards);
+                    dHand.addCards(dCards);
                     dHand.setValue(this.calcCardVal(dHand["cards"]));
-                    pHand.add(pCards);
+                    pHand.addCards(pCards);
                     pHand.setValue(this.calcCardVal(pHand["cards"]));
                     this.setState({ dealerHand: dHand, playerHand: [pHand], gameState: State.PLAY_GAME },
                         this.checkWinCondition
@@ -128,7 +129,7 @@ class Game extends React.Component {
         this.drawCard(1).then(cards => {
             let pHand = this.state.playerHand; // All player hands (split hands)
             let aHand = this.state.playerHand[this.state.activeHand]; // Active player hand
-            aHand.add(cards);
+            aHand.addCards(cards);
             aHand.setValue(this.calcCardVal(aHand["cards"]));
             pHand[this.state.activeHand] = aHand;
             this.setState({ playerHand: pHand, playerCardVal: aHand.getValue() },
@@ -143,7 +144,7 @@ class Game extends React.Component {
     stand() {
         // If other hands exist, proceed to next hand
         if (this.state.activeHand < this.state.playerHand.length - 1) {
-            this.state.activeHand++;
+            this.setState({ activeHand: this.state.activeHand + 1 });
             return;
         }
         // If no other hands exist, play out dealer's hand
@@ -151,7 +152,7 @@ class Game extends React.Component {
         let pHand = this.state.playerHand[this.state.activeHand];
         if (dHand.getValue() < pHand.getValue() || dHand.getValue() < 17) {
             this.drawCard(1).then(dCards => {
-                dHand.add(dCards);
+                dHand.addCards(dCards);
                 dHand.setValue(this.calcCardVal(dHand["cards"]));
                 this.setState({ dealerHand: dHand, dealerCardVal: dHand.getValue() },
                     this.stand
@@ -161,8 +162,23 @@ class Game extends React.Component {
         this.checkWinCondition();
     }
 
-    split(hand) {
-
+    /**
+     * Splits the active hand into two hands
+     */
+    split() {
+        let aHand = this.state.playerHand[this.state.activeHand]; // Active player hand
+        let pHand = this.state.playerHand; // All player hands
+        let newHand = new Hand([]); // New hand
+        let card = [aHand["cards"][1]]; // Card to move
+        // Build new hand
+        newHand.addCards(card);
+        newHand.setValue(this.calcCardVal(newHand["cards"]));
+        // Modify active hand
+        aHand.removeCards(card);
+        aHand.setValue(this.calcCardVal(aHand["cards"]));
+        // Rebuild player hands array
+        pHand.splice(pHand.indexOf(aHand), 1, aHand, newHand);
+        this.setState({ playerHand: pHand });
     }
 
     /**
@@ -207,7 +223,7 @@ class Game extends React.Component {
                         <DealerHand hand={this.state.dealerHand} />
                         <p id="endGameMessage" className="center-in-parent">{this.state.endGameMessage}</p>
                         <PlayerHand hands={this.state.playerHand} />
-                        <GameControls gameState={this.state.gameState} startGame={this.startGame} stand={this.stand} hit={this.hit} />
+                        <GameControls gameState={this.state.gameState} startGame={this.startGame} stand={this.stand} hit={this.hit} split={this.split} />
                     </div>
                 );
             default:

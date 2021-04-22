@@ -11,7 +11,7 @@ class GameControls extends React.Component {
                     <div id="game-controls">
                         <Button className="btn-game" onClick={this.props.stand}>Stand</Button>
                         <Button className="btn-game" onClick={this.props.hit}>Hit</Button>
-                        <Button className="btn-game">Split</Button>
+                        <Button className="btn-game" onClick={this.props.split}>Split</Button>
                     </div>
                 );
             case State.GAME_WON:

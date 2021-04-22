@@ -1,5 +1,3 @@
-import Game from '../components/Game';
-
 class Hand {
 
     constructor(hand) {
@@ -7,14 +5,14 @@ class Hand {
         this.value = 0;
     }
 
-    add(cards) {
+    addCards(cards) {
         for (var i = 0; i < cards.length; i++) {
             this.cards.push(cards[i]);
         }
     }
 
-    remove(cards) {
-
+    removeCards(cards) {
+        this.cards.splice(1, 1);
     }
 
     getCards() {
