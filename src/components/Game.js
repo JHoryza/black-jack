@@ -36,6 +36,9 @@ class Game extends React.Component {
         this.split = this.split.bind(this);
     }
 
+    /**
+     * Resets game variables and state
+     */
     resetGame() {
         this.deckId = "";
         this.activeHand = 0;
@@ -62,6 +65,7 @@ class Game extends React.Component {
                     this.setState({ dealerHand: [dHand], playerHand: [pHand], gameState: State.PLAY_GAME },
                         () => {
                             if (this.isBlackjack(pHand)) {
+                                pHand.setStatus("[BLACKJACK]");
                                 this.setState({ gameState: State.END_GAME });
                             }
                         }
@@ -69,6 +73,23 @@ class Game extends React.Component {
                 });
             });
         });
+    }
+
+    /**
+     * Handles end of game routines
+     */
+    endGame() {
+        let dHand = this.state.dealerHand[0];
+        if (this.playoutHand) {
+            this.dealerDraw(1, function () {
+                if (dHand.getValue() === 21 && dHand.getCards().length === 2)
+                    dHand.setStatus("BLACKJACK");
+                this.checkWinCondition();
+                this.setState({ gameState: State.END_GAME });
+            }.bind(this));
+        } else {
+            this.setState({ gameState: State.END_GAME });
+        }
     }
 
     /**
@@ -84,7 +105,7 @@ class Game extends React.Component {
 
     /**
      * API call to draw a given a number of cards
-     * @param {*} count number of cards to draw
+     * @param {int} count number of cards to draw
      * @returns array of drawn cards
      */
     async drawCard(count) {
@@ -94,6 +115,29 @@ class Game extends React.Component {
                     return result["cards"];
                 });
         return cards;
+    }
+
+    /**
+     * Handles routines that play out the dealer's hand
+     * @param {int} rec tracks number of pending recursive calls to delay callback
+     * @param {function} cb function callback once recursion has resolved
+     */
+    dealerDraw(rec, cb) {
+        let dHand = this.state.dealerHand[0];
+        rec--;
+        if (dHand.getValue() < 17) {
+            rec++;
+            this.drawCard(1).then(dCards => {
+                dHand.addCards(dCards);
+                dHand.setValue(this.calcCardVal(dHand["cards"]));
+                this.setState({ dealerHand: [dHand] },
+                    () => {
+                        this.dealerDraw(rec, cb);
+                    }
+                );
+            });
+        }
+        if (rec == 0) cb();
     }
 
     /**
@@ -147,6 +191,7 @@ class Game extends React.Component {
             this.setState({ playerHand: pHand },
                 () => {
                     if (this.isBust(aHand)) {
+                        aHand.setStatus("[BUST]");
                         if (!this.hasNextHand()) {
                             this.endGame();
                         } else {
@@ -170,35 +215,6 @@ class Game extends React.Component {
         }
     }
 
-    dealerDraw(rec, cb) {
-        let dHand = this.state.dealerHand[0];
-        rec--;
-        if (dHand.getValue() < 17) {
-            rec++;
-            this.drawCard(1).then(dCards => {
-                dHand.addCards(dCards);
-                dHand.setValue(this.calcCardVal(dHand["cards"]));
-                this.setState({ dealerHand: [dHand] },
-                    () => {
-                        this.dealerDraw(rec, cb);
-                    }
-                );
-            });
-        }
-        if (rec == 0) cb();
-    }
-
-    endGame() {
-        if (this.playoutHand) {
-            this.dealerDraw(1, function () {
-                this.checkWinCondition();
-                this.setState({ gameState: State.END_GAME });
-            }.bind(this));
-        } else {
-            this.setState({ gameState: State.END_GAME });
-        }
-    }
-
     /**
      * Splits the active hand into two hands
      */
@@ -206,13 +222,13 @@ class Game extends React.Component {
         let aHand = this.state.playerHand[this.activeHand]; // Active player hand
         let pHand = this.state.playerHand; // All player hands
         let newHand = new Hand([]); // New hand
-        let card = [aHand["cards"][1]]; // Card to move
+        let card = [aHand.getCards()[1]]; // Card to move
         // Build new hand
         newHand.addCards(card);
-        newHand.setValue(this.calcCardVal(newHand["cards"]));
+        newHand.setValue(this.calcCardVal(newHand.getCards()));
         // Modify active hand
         aHand.removeCards(card);
-        aHand.setValue(this.calcCardVal(aHand["cards"]));
+        aHand.setValue(this.calcCardVal(aHand.getCards()));
         // Rebuild player hands array
         pHand.splice(pHand.indexOf(aHand), 1, aHand, newHand);
         this.setState({ playerHand: pHand });
@@ -224,6 +240,8 @@ class Game extends React.Component {
     checkWinCondition() {
         let pHand = this.state.playerHand;
         let dHand = this.state.dealerHand[0];
+        if (this.isBust(dHand))
+            dHand.setStatus("[BUST]");
         for (var hand of pHand) {
             if (hand.getStatus().length == 0) {
                 if (hand.getValue() > dHand.getValue()
@@ -236,24 +254,34 @@ class Game extends React.Component {
         }
     }
 
+    /**
+     * Resolves whether hand of cards exceeds value of 21
+     * @param {Object[]} hand cards to validate
+     * @returns true/false
+     */
     isBust(hand) {
-        if (hand.getValue() > 21) {
-            hand.setStatus("[BUST]");
+        if (hand.getValue() > 21)
             return true;
-        } else {
+        else
             return false;
-        }
     }
 
+    /**
+     * Resolves whether hand of cards is a value of 21 and length of 2 (cards)
+     * @param {Object[]} hand 
+     * @returns true/false
+     */
     isBlackjack(hand) {
-        if (hand.getValue() === 21 && hand["cards"].length === 2) {
-            hand.setStatus("[BLACKJACK]");
+        if (hand.getValue() === 21 && hand.getCards().length === 2)
             return true;
-        } else {
+        else
             return false;
-        }
     }
 
+    /**
+     * Resolves whether there is another hand to advance to
+     * @returns true/false
+     */
     hasNextHand() {
         let pHand = this.state.playerHand;
         if (this.activeHand < pHand.length - 1)
