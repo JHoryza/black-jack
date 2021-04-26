@@ -7,19 +7,13 @@ import GameControls from './game/GameControls';
 import * as State from '../game/State';
 import Hand from '../game/Hand';
 
-/*
-TODO:
-
--Split functionality
-
-*/
-
 class Game extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
+            game: null,
             gameState: State.IDLE,
             dealerHand: [new Hand([])],
             playerHand: [new Hand([])],
@@ -27,6 +21,7 @@ class Game extends React.Component {
         };
 
         this.deckId = "";
+        this.cards = [];
         this.activeHand = 0;
         this.playoutHand = false;
 
@@ -41,6 +36,7 @@ class Game extends React.Component {
      */
     resetGame() {
         this.deckId = "";
+        this.cards = [];
         this.activeHand = 0;
         this.playoutHand = false;
         this.setState({ dealerHand: [new Hand([])], playerHand: [new Hand([])], endGameMessage: "" });
@@ -53,15 +49,15 @@ class Game extends React.Component {
         // Reset game state properties
         this.resetGame();
         // Shuffle new deck and deal out opening hands
-        this.shuffleDeck().then(() => {
+        this.shuffleDeck(function() {
             let dHand = this.state.dealerHand[0];
             let pHand = this.state.playerHand[this.activeHand];
-            this.drawCard(1).then((dCards) => {
-                this.drawCard(2).then((pCards) => {
-                    dHand.addCards(dCards);
-                    dHand.setValue(this.calcCardVal(dHand["cards"]));
-                    pHand.addCards(pCards);
-                    pHand.setValue(this.calcCardVal(pHand["cards"]));
+            this.drawCard(1, function() {
+                dHand.addCards(this.cards);
+                dHand.setValue(this.calcCardVal(this.cards));
+                this.drawCard(2, function() {
+                    pHand.addCards(this.cards);
+                    pHand.setValue(this.calcCardVal(this.cards));
                     this.setState({ dealerHand: [dHand], playerHand: [pHand], gameState: State.PLAY_GAME },
                         () => {
                             if (this.isBlackjack(pHand)) {
@@ -70,9 +66,9 @@ class Game extends React.Component {
                             }
                         }
                     );
-                });
-            });
-        });
+                }.bind(this));
+            }.bind(this));
+        }.bind(this));        
     }
 
     /**
@@ -94,27 +90,57 @@ class Game extends React.Component {
 
     /**
      * API call to generate a new deck of cards
+     * @param {function()} cb callback function
+     * @param {int} attempts max number of API call attempts to make
      */
-    async shuffleDeck() {
+    async shuffleDeck(cb, attempts = 10) {
+        const errorCodes = [408, 500, 502, 503, 504, 522, 524];
         await fetch("https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1").then(
-            res => res.json()).then(
-                result => {
-                    this.deckId = result.deck_id;
-                });
+            res => {
+                if (res.ok) {
+                    res.json().then(
+                        result => {
+                            this.deckId = result.deck_id;
+                            cb();
+                        }
+                    );
+                } else {
+                    if (attempts > 0 && errorCodes.includes(res.status)) {
+                        return this.shuffleDeck(cb, attempts - 1);
+                    } else {
+                        throw new Error(res);
+                    }
+                }
+            }
+        ).catch(console.error);
     }
 
     /**
      * API call to draw a given a number of cards
      * @param {int} count number of cards to draw
-     * @returns array of drawn cards
+     * @param {function()} cb callback function
+     * @param {int} attempts max number of API call attempts to make
      */
-    async drawCard(count) {
-        let cards = await fetch(`https://deckofcardsapi.com/api/deck/${this.deckId}/draw/?count=${count}`).then(
-            res => res.json()).then(
-                result => {
-                    return result["cards"];
-                });
-        return cards;
+    async drawCard(count, cb, attempts = 10) {
+        const errorCodes = [408, 500, 502, 503, 504, 522, 524];
+        await fetch(`https://deckofcardsapi.com/api/deck/${this.deckId}/draw/?count=${count}`).then(
+            res => {
+                if (res.ok) {
+                    res.json().then(
+                        result => {
+                            this.cards = result["cards"];
+                            cb();
+                        }
+                    );
+                } else {
+                    if (attempts > 0 && errorCodes.includes(res.status)) {
+                        return this.drawCard(count, cb, attempts - 1);
+                    } else {
+                        throw new Error(res);
+                    }
+                }
+            }
+        ).catch(console.error);
     }
 
     /**
@@ -127,17 +153,18 @@ class Game extends React.Component {
         rec--;
         if (dHand.getValue() < 17) {
             rec++;
-            this.drawCard(1).then(dCards => {
-                dHand.addCards(dCards);
-                dHand.setValue(this.calcCardVal(dHand["cards"]));
+
+            this.drawCard(1, function() {
+                dHand.addCards(this.cards);
+                dHand.setValue(this.calcCardVal(dHand.getCards()));
                 this.setState({ dealerHand: [dHand] },
                     () => {
                         this.dealerDraw(rec, cb);
                     }
                 );
-            });
+            }.bind(this));
         }
-        if (rec == 0) cb();
+        if (rec === 0) cb();
     }
 
     /**
@@ -182,11 +209,11 @@ class Game extends React.Component {
      * Draws card and recalculates hand value
      */
     hit() {
-        this.drawCard(1).then(cards => {
+        this.drawCard(1, function() {
             let pHand = this.state.playerHand; // All player hands (split hands)
             let aHand = this.state.playerHand[this.activeHand]; // Active player hand
-            aHand.addCards(cards);
-            aHand.setValue(this.calcCardVal(aHand["cards"]));
+            aHand.addCards(this.cards);
+            aHand.setValue(this.calcCardVal(aHand.getCards()));
             pHand[this.activeHand] = aHand;
             this.setState({ playerHand: pHand },
                 () => {
@@ -200,7 +227,7 @@ class Game extends React.Component {
                     }
                 }
             );
-        });
+        }.bind(this));
     }
 
     /**
@@ -243,7 +270,7 @@ class Game extends React.Component {
         if (this.isBust(dHand))
             dHand.setStatus("[BUST]");
         for (var hand of pHand) {
-            if (hand.getStatus().length == 0) {
+            if (hand.getStatus().length === 0) {
                 if (hand.getValue() > dHand.getValue()
                     || dHand.getValue() > 21) {
                     hand.setStatus("[WIN]");

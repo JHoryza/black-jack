@@ -2,7 +2,7 @@ import '../css/Header.css';
 
 function Header() {
     return (
-        <div>
+        <div id="header">
             <h1>Joker's Wild</h1>
         </div>
     );
