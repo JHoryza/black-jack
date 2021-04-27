@@ -4,6 +4,7 @@ class Hand {
         this.cards = hand;
         this.value = 0;
         this.status = "";
+        this.bet = 0;
     }
 
     addCards(cards) {
@@ -38,6 +39,14 @@ class Hand {
 
     setStatus(status) {
         this.status = status;
+    }
+
+    getBet() {
+        return this.bet;
+    }
+
+    setBet(bet) {
+        this.bet = bet;
     }
 }
 

@@ -23,8 +23,12 @@ class Game extends React.Component {
         this.deckId = "";
         this.cards = [];
         this.playoutHand = false;
+        this.chips = 5000;
+        this.chipsWon = 0;
 
         this.startGame = this.startGame.bind(this);
+        this.resetGame = this.resetGame.bind(this);
+        this.placeBet = this.placeBet.bind(this);
         this.stand = this.stand.bind(this);
         this.hit = this.hit.bind(this);
         this.split = this.split.bind(this);
@@ -36,8 +40,9 @@ class Game extends React.Component {
     resetGame() {
         this.deckId = "";
         this.cards = [];
+        this.chipsWon = 0;
         this.playoutHand = false;
-        this.setState({ dealerHand: [new Hand([])], playerHand: [new Hand([])], activeHand: 0, endGameMessage: "" });
+        this.setState({ gameState: State.IDLE, dealerHand: [new Hand([])], playerHand: [new Hand([])], activeHand: 0, endGameMessage: "" });
     }
 
     /**
@@ -56,10 +61,11 @@ class Game extends React.Component {
                 this.drawCard(2, function () {
                     pHand.addCards(this.cards);
                     pHand.setValue(this.calcCardVal(this.cards));
-                    this.setState({ dealerHand: [dHand], playerHand: [pHand], gameState: State.PLAY_GAME },
+                    this.setState({ dealerHand: [dHand], playerHand: [pHand], gameState: State.PLACE_BET },
                         () => {
                             if (this.isBlackjack(pHand)) {
                                 pHand.setStatus("[BLACKJACK]");
+                                this.chipsWon += parseFloat(pHand.getBet()) * 2;
                                 this.setState({ gameState: State.END_GAME });
                             }
                         }
@@ -84,6 +90,16 @@ class Game extends React.Component {
         } else {
             this.setState({ gameState: State.END_GAME });
         }
+    }
+
+    /**
+     * Assigns bet to value of button pressed by user
+     * @param {Button} button 
+     */
+    placeBet = (button) => {
+        let bet = button.target.getAttribute("value");
+        this.state.playerHand[0].setBet(bet);
+        this.setState({ gameState: State.PLAY_GAME });
     }
 
     /**
@@ -217,8 +233,9 @@ class Game extends React.Component {
                 () => {
                     if (this.isBust(aHand)) {
                         aHand.setStatus("[BUST]");
+                        this.chipsWon -= parseFloat(aHand.getBet());
                         if (!this.hasNextHand()) {
-                            this.endGame();
+                            this.checkWinCondition();
                         } else {
                             this.setState({ activeHand: this.state.activeHand + 1 });
                         }
@@ -253,6 +270,7 @@ class Game extends React.Component {
             // Build new hand
             newHand.addCards(card);
             newHand.setValue(this.calcCardVal(newHand.getCards()));
+            newHand.setBet(aHand.getBet());
             // Modify active hand
             aHand.removeCards(card);
             aHand.setValue(this.calcCardVal(aHand.getCards()));
@@ -268,20 +286,32 @@ class Game extends React.Component {
     checkWinCondition() {
         let pHand = this.state.playerHand;
         let dHand = this.state.dealerHand[0];
-        if (this.isBust(dHand))
-            dHand.setStatus("[BUST]");
-        for (var hand of pHand) {
-            if (hand.getStatus().length === 0) {
-                if (hand.getValue() > dHand.getValue()
-                    || dHand.getValue() > 21) {
-                    hand.setStatus("[WIN]");
-                } else if (hand.getValue() === dHand.getValue()) {
-                    hand.setStatus("[PUSH]");
-                } else {
-                    hand.setStatus("[LOSE]");
+        if (this.isBust(dHand)) dHand.setStatus("[BUST]");
+        if (this.isBlackjack(dHand)) {
+            for (var hand of pHand) {
+                if (hand.getStatus().length === 0) {
+                    pHand.setStatus("[LOSE]");
+                }
+                this.chipsWon -= parseFloat(hand.getBet());
+            }
+        } else {
+            for (var hand of pHand) {
+                if (hand.getStatus().length === 0) {
+                    if (hand.getValue() > dHand.getValue()
+                        || dHand.getValue() > 21) {
+                        hand.setStatus("[WIN]");
+                        this.chipsWon += parseFloat(hand.getBet());
+                    } else if (hand.getValue() === dHand.getValue()) {
+                        hand.setStatus("[PUSH]");
+                    } else {
+                        hand.setStatus("[LOSE]");
+                        this.chipsWon -= parseFloat(hand.getBet());
+                    }
                 }
             }
         }
+        this.chips += parseFloat(this.chipsWon);
+        this.setState({ gameState: State.END_GAME, endGameMessage: "Result: $" + this.chipsWon });
     }
 
     /**
@@ -326,6 +356,13 @@ class Game extends React.Component {
      */
     render() {
         switch (this.state.gameState) {
+            case State.PLACE_BET:
+                return (
+                    <div className="container-fluid center-in-parent">
+                        <h3>Place Bet:</h3>
+                        <GameControls placeBet={this.placeBet} context={this} gameState={this.state.gameState} startGame={this.startGame} quit={this.resetGame} stand={this.stand} hit={this.hit} split={this.split} />
+                    </div>
+                );
             case State.END_GAME:
             case State.PLAY_GAME:
                 return (
@@ -333,13 +370,14 @@ class Game extends React.Component {
                         <DealerHand hand={this.state.dealerHand[0]} />
                         <p id="endGameMessage" className="center-in-parent">{this.state.endGameMessage}</p>
                         <PlayerHand hands={this.state.playerHand} activeHand={this.state.activeHand} />
-                        <GameControls gameState={this.state.gameState} startGame={this.startGame} stand={this.stand} hit={this.hit} split={this.split} />
+                        <GameControls context={this} gameState={this.state.gameState} startGame={this.startGame} quit={this.resetGame} stand={this.stand} hit={this.hit} split={this.split} />
                     </div>
                 );
+            case State.IDLE:
             default:
                 return (
                     <div className="center-in-parent">
-                        <Button onClick={this.startGame} className="btn btn-play">Start Game</Button>
+                        <Button onClick={this.startGame} className="btn-play">Start Game</Button>
                     </div>
                 );
         }
