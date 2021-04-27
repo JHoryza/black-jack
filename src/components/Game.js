@@ -23,7 +23,7 @@ class Game extends React.Component {
         this.deckId = "";
         this.cards = [];
         this.playoutHand = false;
-        this.chips = 5000;
+        this.chips = 500;
         this.chipsWon = 0;
 
         this.startGame = this.startGame.bind(this);
@@ -31,6 +31,7 @@ class Game extends React.Component {
         this.placeBet = this.placeBet.bind(this);
         this.stand = this.stand.bind(this);
         this.hit = this.hit.bind(this);
+        this.double = this.double.bind(this);
         this.split = this.split.bind(this);
     }
 
@@ -258,26 +259,69 @@ class Game extends React.Component {
     }
 
     /**
+     * Doubles the bet and draws one card
+     */
+    double() {
+        let pHand = this.state.playerHand; // All player hands
+        let aHand = this.state.playerHand[this.state.activeHand]; // Active player hand
+        aHand.setBet(aHand.getBet() * 2);
+        this.drawCard(1, function () {
+            aHand.addCards(this.cards);
+            aHand.setValue(this.calcCardVal(aHand.getCards()));
+            pHand[this.state.activeHand] = aHand;
+            this.setState({ playerHand: pHand },
+                () => {
+                    if (this.isBust(aHand)) {
+                        aHand.setStatus("[BUST]");
+                        this.chipsWon -= parseFloat(aHand.getBet());
+                    } else {
+                        this.playoutHand = true;
+                    }
+                    if (!this.hasNextHand()) {
+                        this.endGame();
+                    } else {
+                        this.setState({ activeHand: this.state.activeHand + 1 });
+                    }
+                }
+            );
+        }.bind(this));
+    }
+
+    /**
      * Splits the active hand into two hands
      */
     split() {
         let aHand = this.state.playerHand[this.state.activeHand]; // Active player hand
-        if (this.calcCardVal([aHand.getCards()[0]]) === this.calcCardVal([aHand.getCards()[1]])
-            && aHand.getCards().length === 2) {
-            let pHand = this.state.playerHand; // All player hands
-            let newHand = new Hand([]); // New hand
-            let card = [aHand.getCards()[1]]; // Card to move
-            // Build new hand
-            newHand.addCards(card);
+        let pHand = this.state.playerHand; // All player hands
+        let newHand = new Hand([]); // New hand
+        let card = aHand.getCards()[1]; // Card to move
+        // Build new hand
+        this.drawCard(2, function () {
+            newHand.addCards([card, this.cards[0]]);
             newHand.setValue(this.calcCardVal(newHand.getCards()));
             newHand.setBet(aHand.getBet());
             // Modify active hand
             aHand.removeCards(card);
+            aHand.addCards([this.cards[1]]);
             aHand.setValue(this.calcCardVal(aHand.getCards()));
             // Rebuild player hands array
             pHand.splice(pHand.indexOf(aHand), 1, aHand, newHand);
-            this.setState({ playerHand: pHand });
-        }
+            this.setState({ playerHand: pHand },
+                () => {
+                    if (this.isBlackjack(newHand)) {
+                        newHand.setStatus("[BLACKJACK]");
+                        this.chipsWon += parseFloat(newHand.getBet()) * 2;
+                    }
+                    if (this.isBlackjack(aHand)) {
+                        aHand.setStatus("[BLACKJACK]");
+                        this.chipsWon += parseFloat(aHand.getBet()) * 2;
+                    }
+                    if (this.isBlackjack(newHand) && this.isBlackjack(aHand)) {
+                        this.setState({ gameState: State.END_GAME });
+                    }
+                }
+            );
+        }.bind(this));
     }
 
     /**
@@ -351,6 +395,31 @@ class Game extends React.Component {
     }
 
     /**
+     * Resolves whether a hand can be split
+     * @param {Object[]} hand 
+     * @returns 
+     */
+    canSplit(hand) {
+        if (hand.getCards().length === 2
+            && this.calcCardVal([hand.getCards()[0]]) === this.calcCardVal([hand.getCards()[1]]))
+            return true;
+        else
+            return false;
+    }
+
+    /**
+     * Resolves whether a bet can be doubled
+     * @param {Object[]} hand 
+     * @returns 
+     */
+    canDouble(hand) {
+        if (hand.getCards().length === 2)
+            return true;
+        else
+            return false;
+    }
+
+    /**
      * Screen render of HTML based on current gameState
      * @returns HTML to render on screen
      */
@@ -360,7 +429,9 @@ class Game extends React.Component {
                 return (
                     <div className="container-fluid center-in-parent">
                         <h3>Place Bet:</h3>
-                        <GameControls placeBet={this.placeBet} context={this} gameState={this.state.gameState} startGame={this.startGame} quit={this.resetGame} stand={this.stand} hit={this.hit} split={this.split} />
+                        <GameControls placeBet={this.placeBet} chips={this.chips} gameState={this.state.gameState} />
+                        <br />
+                        <h4>Total Chips: ${this.chips}</h4>
                     </div>
                 );
             case State.END_GAME:
@@ -370,7 +441,9 @@ class Game extends React.Component {
                         <DealerHand hand={this.state.dealerHand[0]} />
                         <p id="endGameMessage" className="center-in-parent">{this.state.endGameMessage}</p>
                         <PlayerHand hands={this.state.playerHand} activeHand={this.state.activeHand} />
-                        <GameControls context={this} gameState={this.state.gameState} startGame={this.startGame} quit={this.resetGame} stand={this.stand} hit={this.hit} split={this.split} />
+                        <GameControls gameState={this.state.gameState} context={this}
+                            startGame={this.startGame} quit={this.resetGame}
+                            stand={this.stand} hit={this.hit} double={this.double} split={this.split} />
                     </div>
                 );
             case State.IDLE:

@@ -6,6 +6,12 @@
     align-items: center;
 }
 
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+    background-color: gray !important;
+    color: white !important;
+}
+
 .btn-primary,
 .btn-primary:active,
 .btn-primary:focus {
