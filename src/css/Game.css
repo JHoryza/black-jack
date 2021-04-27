@@ -6,6 +6,26 @@
     align-items: center;
 }
 
+.btn {
+    
+}
+
+.btn-primary,
+.btn-primary:active,
+.btn-primary:focus {
+    background: #960200 !important;
+    color: #ffffff !important;
+    border: 0 none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.btn-primary:hover,
+.btn-primary:active:focus  {
+    background: #ffc857 !important;
+    color: #000000 !important;
+}
+
 .btn-play {
     font-size: 24px;
 }

@@ -9,17 +9,17 @@ class GameControls extends React.Component {
             case State.PLAY_GAME:
                 return (
                     <div id="game-controls">
-                        <Button className="btn-game" onClick={this.props.stand}>Stand</Button>
-                        <Button className="btn-game" onClick={this.props.hit}>Hit</Button>
-                        <Button className="btn-game" onClick={this.props.split}>Split</Button>
+                        <Button className="btn btn-game" onClick={this.props.stand}>Stand</Button>
+                        <Button className="btn btn-game" onClick={this.props.hit}>Hit</Button>
+                        <Button className="btn btn-game" onClick={this.props.split}>Split</Button>
                     </div>
                 );
             case State.END_GAME:
             default:
                 return (
                     <div id="game-controls">
-                        <Button className="btn-game" onClick={this.props.startGame}>Play Again</Button>
-                        <Button className="btn-game">Quit</Button>
+                        <Button className="btn btn-game" onClick={this.props.startGame}>Play Again</Button>
+                        <Button className="btn btn-game">Quit</Button>
                     </div>
                 );
         }

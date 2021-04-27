@@ -13,7 +13,6 @@ class Game extends React.Component {
         super(props);
 
         this.state = {
-            game: null,
             gameState: State.IDLE,
             dealerHand: [new Hand([])],
             playerHand: [new Hand([])],
@@ -340,7 +339,7 @@ class Game extends React.Component {
             default:
                 return (
                     <div className="center-in-parent">
-                        <Button onClick={this.startGame} className="btn-play">Start Game</Button>
+                        <Button onClick={this.startGame} className="btn btn-play">Start Game</Button>
                     </div>
                 );
         }
