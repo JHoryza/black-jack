@@ -126,25 +126,23 @@ class Game extends React.Component {
      * @param {function()} cb callback function
      * @param {int} attempts max number of API call attempts to make
      */
-    async drawCard(hand, count, cb, attempts = 10) {
+    async drawCard(hand, count, cb, attempts = 10, delay = 300) {
         const errorCodes = [408, 500, 502, 503, 504, 522, 524];
         await fetch(`https://deckofcardsapi.com/api/deck/${this.deckId}/draw/?count=${count}`).then(
             res => {
                 if (res.ok) {
                     res.json().then(
                         data => {
-                            try {
-                                hand.addCards(data["cards"]);
-                                hand.setValue(this.calcCardVal(hand.getCards()));
-                                cb(hand);
-                            } catch (error) {
-                                this.resetGame();
-                            }
+                            hand.addCards(data["cards"]);
+                            hand.setValue(this.calcCardVal(hand.getCards()));
+                            cb(hand);
                         }
                     );
                 } else {
                     if (attempts > 0 && errorCodes.includes(res.status)) {
-                        return this.drawCard(count, cb, attempts - 1);
+                        setTimeout(() => {
+                            this.drawCard(hand, count, cb, attempts - 1);
+                        }, delay);
                     } else {
                         throw new Error(res);
                     }
@@ -307,14 +305,16 @@ class Game extends React.Component {
             playerHand[this.state.activeHand] = activeHand;
             if (this.isBlackjack(dealerHand)) {
                 dealerHand.setStatus(Status.BLACKJACK);
+            } else if (this.isBust(dealerHand)) {
+                dealerHand.setStatus(Status.BUST);
             }
             for (var hand of playerHand) {
                 if (hand.getStatus().length === 0) {
-                    if (dealerHand.getStatus(Status.BLACKJACK)) {
+                    if (dealerHand.getStatus() === Status.BLACKJACK) {
                         hand.setStatus(Status.LOSE);
                         this.chipsWon -= hand.getBet();
-                    } else if (dealerHand.getStatus(Status.BUST)) {
-                        hand.setStatue(Status.WIN);
+                    } else if (dealerHand.getStatus() === Status.BUST) {
+                        hand.setStatus(Status.WIN);
                         this.chipsWon += hand.getBet();
                     } else if (dealerHand.getValue() > hand.getValue()) {
                         hand.setStatus(Status.LOSE);
