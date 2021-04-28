@@ -42,7 +42,7 @@ class Hand {
     }
 
     getBet() {
-        return this.bet;
+        return parseInt(this.bet);
     }
 
     setBet(bet) {
