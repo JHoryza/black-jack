@@ -5,6 +5,7 @@ import DealerHand from './game/DealerHand';
 import PlayerHand from './game/PlayerHand';
 import GameControls from './game/GameControls';
 import * as State from '../game/State';
+import * as Status from '../game/Status';
 import Hand from '../game/Hand';
 
 class Game extends React.Component {
@@ -289,9 +290,9 @@ class Game extends React.Component {
         if (!gameOver) {
             // Check for Blackjack or Bust
             if (this.isBlackjack(activeHand)) {
-                activeHand.setStatus("[BLACKJACK]");
+                activeHand.setStatus(Status.BLACKJACK);
             } else if (this.isBust(activeHand)) {
-                activeHand.setStatus("[BUST]");
+                activeHand.setStatus(Status.BUST);
             }
             // Advance to next hand or end game
             if (activeHand.getStatus().length !== 0) {
@@ -305,29 +306,29 @@ class Game extends React.Component {
             let dealerHand = this.state.dealerHand[0];
             playerHand[this.state.activeHand] = activeHand;
             if (this.isBlackjack(dealerHand)) {
-                dealerHand.setStatus("[BLACKJACK]");
+                dealerHand.setStatus(Status.BLACKJACK);
             }
             for (var hand of playerHand) {
                 if (hand.getStatus().length === 0) {
-                    if (dealerHand.getStatus("[BLACKJACK]")) {
-                        hand.setStatus("[LOSE]");
+                    if (dealerHand.getStatus(Status.BLACKJACK)) {
+                        hand.setStatus(Status.LOSE);
                         this.chipsWon -= hand.getBet();
-                    } else if (dealerHand.getStatus("[BUST]")) {
-                        hand.setStatue("[WIN]");
+                    } else if (dealerHand.getStatus(Status.BUST)) {
+                        hand.setStatue(Status.WIN);
                         this.chipsWon += hand.getBet();
                     } else if (dealerHand.getValue() > hand.getValue()) {
-                        hand.setStatus("[LOSE]");
+                        hand.setStatus(Status.LOSE);
                         this.chipsWon -= hand.getBet();
                     } else if (dealerHand.getValue() === hand.getValue()) {
-                        hand.setStatus("[PUSH]");
+                        hand.setStatus(Status.PUSH);
                     } else if (dealerHand.getValue() < hand.getValue()) {
-                        hand.setStatus("[WIN]");
+                        hand.setStatus(Status.WIN);
                         this.chipsWon += hand.getBet();
                     }
                 } else {
-                    if (hand.getStatus() === "[BLACKJACK]") {
+                    if (hand.getStatus() === Status.BLACKJACK) {
                         this.chipsWon += hand.getBet() * 2;
-                    } else if (hand.getStatus() === "[BUST]") {
+                    } else if (hand.getStatus() === Status.BUST) {
                         this.chipsWon -= hand.getBet();
                     }
                 }
@@ -343,39 +344,6 @@ class Game extends React.Component {
             }
             this.setState({ gameState: State.END_GAME, endGameMessage: endGameMessage });
         }
-
-
-
-
-
-        // let pHand = this.state.playerHand;
-        // let dHand = this.state.dealerHand[0];
-        // if (this.isBust(dHand)) dHand.setStatus("[BUST]");
-        // if (this.isBlackjack(dHand)) {
-        //     for (var hand of pHand) {
-        //         if (hand.getStatus().length === 0) {
-        //             pHand.setStatus("[LOSE]");
-        //         }
-        //         this.chipsWon -= parseFloat(hand.getBet());
-        //     }
-        // } else {
-        //     for (var hand of pHand) {
-        //         if (hand.getStatus().length === 0) {
-        //             if (hand.getValue() > dHand.getValue()
-        //                 || dHand.getValue() > 21) {
-        //                 hand.setStatus("[WIN]");
-        //                 this.chipsWon += parseFloat(hand.getBet());
-        //             } else if (hand.getValue() === dHand.getValue()) {
-        //                 hand.setStatus("[PUSH]");
-        //             } else {
-        //                 hand.setStatus("[LOSE]");
-        //                 this.chipsWon -= parseFloat(hand.getBet());
-        //             }
-        //         }
-        //     }
-        // }
-        // this.chips += parseFloat(this.chipsWon);
-        // this.setState({ gameState: State.END_GAME, endGameMessage: "Result: $" + this.chipsWon });
     }
 
     /**
