@@ -47,7 +47,9 @@ class GameControls extends React.Component {
             default:
                 return (
                     <div id="game-controls">
-                        <Button className="btn-game" onClick={this.props.startGame}>Play Again</Button>
+                        {this.props.context.chips <= 0 ? "" :
+                            <Button className="btn-game" onClick={this.props.startGame}>Play Again</Button>
+                        }
                         <Button className="btn-game" onClick={this.props.quit}>Quit</Button>
                     </div>
                 );

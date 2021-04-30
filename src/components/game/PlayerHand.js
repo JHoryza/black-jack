@@ -5,14 +5,14 @@ class PlayerHand extends React.Component {
     renderHand(hand, i) {
         return (
             <div>
+                <p>
+                    {i === this.props.activeHand ? <span style={{ fontWeight: "bolder", color: "#ffc857" }}>{"> "}</span> : ""}
+                    <span style={{ fontWeight: "bold" }}>Value:</span> {hand.getValue()} {hand.getStatus()}
+                    {i === this.props.activeHand ? <span style={{ fontWeight: "bolder", color: "#ffc857" }}>{" <"}</span> : ""}
+                    <br />
+                    <span style={{ fontWeight: "bold" }}>Bet:</span> ${hand.getBet()}
+                </p>
                 <div className="cards">
-                    <p>
-                        {i === this.props.activeHand ? <span style={{ fontWeight: "bolder", color:"#ffc857" }}>{"> "}</span> : ""}
-                        <span style={{ fontWeight: "bold" }}>Value:</span> {hand.getValue()} {hand.getStatus()}
-                        {i === this.props.activeHand ? <span style={{ fontWeight: "bolder", color:"#ffc857" }}>{" <"}</span> : ""}
-                        <br />
-                        <span style={{ fontWeight: "bold" }}>Bet:</span> ${hand.getBet()}
-                    </p>
                     {hand.getCards().map((card, j) => (
                         <img className="card" src={card.image} alt={card.code} key={j}></img>
                     ))}
@@ -31,7 +31,6 @@ class PlayerHand extends React.Component {
                         </div>
                     ))}
                 </div>
-                <br />
                 <h3>Your Hand</h3>
             </div>
         );

@@ -10,8 +10,8 @@ class DealerHand extends React.Component {
                     {this.props.hand.getCards().map((card, i) => (
                         <img className="card" src={card.image} alt={card.code} key={i}></img>
                     ))}
-                    <p><span style={{fontWeight: "bold"}}>Value:</span> {this.props.hand.getValue()} {this.props.hand.getStatus()}</p>
                 </div>
+                <p><span style={{fontWeight: "bold"}}>Value:</span> {this.props.hand.getValue()} {this.props.hand.getStatus()}</p>
             </div>
         );
     }

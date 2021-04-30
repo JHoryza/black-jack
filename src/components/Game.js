@@ -39,6 +39,7 @@ class Game extends React.Component {
      * Resets game variables and state
      */
     resetGame() {
+        if (this.chips <= 0) this.chips = 500;
         this.deckId = "";
         this.cards = [];
         this.chipsWon = 0;
@@ -338,7 +339,10 @@ class Game extends React.Component {
             if (this.chipsWon > 0) {
                 endGameMessage = "You won $" + this.chipsWon + "!";
             } else if (this.chipsWon < 0) {
-                endGameMessage = "You lost $" + Math.abs(this.chipsWon) + "!";
+                if (this.chips <= 0)
+                    endGameMessage = "Your out of chips!";
+                else
+                    endGameMessage = "You lost $" + Math.abs(this.chipsWon) + "!";
             } else {
                 endGameMessage = "PUSH";
             }
